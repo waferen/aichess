@@ -1,7 +1,7 @@
 CONFIG = {
     'kill_action': 30,      #和棋回合数
     'dirichlet': 0.2,       # 国际象棋，0.3；日本将棋，0.15；围棋，0.03
-    'play_out': 1200,        # 每次移动的模拟次数
+    'play_out': 200,         # 每次移动的模拟次数 (优化: 1200→200, 预计提速6倍)
     'c_puct': 5,             # u的权重
     'buffer_size': 100000,   # 经验池大小
     'paddle_model_path': 'current_policy.model',      # paddle模型路径
@@ -10,9 +10,10 @@ CONFIG = {
     'batch_size': 512,  # 每次更新的train_step数量
     'kl_targ': 0.02,  # kl散度控制
     'epochs' : 5,  # 每次更新的train_step数量
-    'game_batch_num': 100,  # 训练次数（AutoDL测试：100轮）
+    'game_batch_num': 200,  # 训练次数
     'use_frame': 'pytorch',  # paddle or pytorch根据自己的环境进行切换
-    'train_update_interval': 600,  #模型更新间隔时间
+    'train_update_interval': 30,  #模型更新间隔时间（秒）
+    'min_new_samples': 512,  # 最小新样本数要求（每局约500样本，即至少1局新游戏）
     'use_redis': False, # 数据存储方式
     'redis_host': 'localhost',
     'redis_port': 6379,

@@ -26,16 +26,7 @@ UIplay.py   GUI界面人机对弈
 
 
 ## 三、本项目是多进程同步训练。
-训练时，在终端运行python collect.py用于自我对弈产生数据，这个可以多开。
-
-然后，在终端运行python train.py用于模型训练，这个终端只用开一个。
-
-## 四、相关资源链接
-B站视频链接：https://www.bilibili.com/video/BV183411g7GX
-
-知乎文章：https://zhuanlan.zhihu.com/p/528824058?
-
-aistudio上一键可运行项目：https://aistudio.baidu.com/aistudio/projectdetail/4215743 （可以使用免费的V100来进行训练）
+训练时，直接运行'autodl_one_click.sh'文件即可，也可根据个人情况调整shell文件中collect并行数量。
 
 ## 五、参考与致谢
 本项目主要参考的资料如下，十分感谢大佬们的分享
@@ -45,8 +36,10 @@ aistudio上一键可运行项目：https://aistudio.baidu.com/aistudio/projectde
 
 3、junxiaosong https://github.com/junxiaosong/AlphaZero_Gomoku (五子棋alphazero)
 
-4、书籍：边做边学深度强化学习：PyTorch 程序设计实践
+4、B站视频链接：https://www.bilibili.com/video/BV183411g7GX
 
-5、书籍：强化学习第二版
+5、书籍：边做边学深度强化学习：PyTorch 程序设计实践
+
+6、书籍：强化学习第二版
 
 后续应该会对该AI继续训练下去，亲手造一个超强的下棋AI简直太酷了！

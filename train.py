@@ -59,6 +59,11 @@ class TrainPipeline:
         self.game_batch_num = CONFIG['game_batch_num']  # 训练更新的次数
         self.best_win_ratio = 0.0
         self.pure_mcts_playout_num = 500
+        self.min_new_samples = CONFIG['min_new_samples']  # 最小新样本数要求
+        self.buffer_size = CONFIG['buffer_size']
+        self.data_buffer = deque(maxlen=self.buffer_size)
+        self.last_trained_iters = 0  # 记录上次训练时的iters
+        self.last_buffer_size = 0  # 记录上次训练时的数据缓冲区大小
 
         log_info(f"训练配置:")
         log_info(f"  - Batch Size: {self.batch_size}")
@@ -66,14 +71,13 @@ class TrainPipeline:
         log_info(f"  - KL Target: {self.kl_targ}")
         log_info(f"  - Learning Rate: {self.learn_rate}")
         log_info(f"  - MCTS Playouts: {self.n_playout}")
+        log_info(f"  - 最小新样本要求: {self.min_new_samples}")
         log_info(f"  - 框架: {CONFIG['use_frame']}")
         log_info(f"  - 最大Batches: {self.game_batch_num}")
 
         if CONFIG['use_redis']:
             self.redis_cli = my_redis.get_redis_cli()
             log_info("使用Redis数据存储")
-        self.buffer_size = maxlen=CONFIG['buffer_size']
-        self.data_buffer = deque(maxlen=self.buffer_size)
 
         if init_model:
             try:
@@ -177,7 +181,8 @@ class TrainPipeline:
         start_time = time.time()
 
         try:
-            for i in range(self.game_batch_num):
+            trained_batches = 0  # 实际训练的批次计数
+            while trained_batches < self.game_batch_num:
                 iter_start_time = time.time()
 
                 # 加载数据
@@ -213,10 +218,19 @@ class TrainPipeline:
 
                 # 训练步骤
                 log_info("-" * 70)
-                log_info(f"🔄 Batch {i+1}/{self.game_batch_num} | Step: {self.iters}")
+                log_info(f"🔄 Batch {trained_batches+1}/{self.game_batch_num} | Step: {self.iters}")
                 log_info(f"📊 数据缓冲区大小: {len(self.data_buffer)} / {self.buffer_size}")
 
-                if len(self.data_buffer) > self.batch_size:
+                # 检查是否有足够的新数据
+                new_samples = len(self.data_buffer) - self.last_buffer_size
+                if self.last_buffer_size == 0:  # 首次训练
+                    new_samples = len(self.data_buffer)
+
+                log_info(f"📈 新增样本: {new_samples} (要求: ≥{self.min_new_samples})")
+
+                if len(self.data_buffer) > self.batch_size and new_samples >= self.min_new_samples:
+                    self.last_trained_iters = self.iters  # 更新训练记录
+                    self.last_buffer_size = len(self.data_buffer)  # 更新缓冲区大小记录
                     loss, entropy = self.policy_updata()
 
                     # 保存模型
@@ -229,24 +243,28 @@ class TrainPipeline:
                         log_info('✗ 不支持所选框架')
 
                     log_info(f"💾 模型已保存: {model_path}")
+                    trained_batches += 1  # 只有真正训练时才增加计数器
                 else:
-                    log_info(f"⚠️  数据不足，等待更多样本 (当前: {len(self.data_buffer)}, 需要: {self.batch_size})")
+                    if new_samples < self.min_new_samples:
+                        log_info(f"⏳ 新数据不足，等待收集 (新样本: {new_samples}, 需要: {self.min_new_samples})")
+                    else:
+                        log_info(f"⚠️  数据不足，等待更多样本 (当前: {len(self.data_buffer)}, 需要: {self.batch_size})")
 
                 iter_time = time.time() - iter_start_time
                 total_time = time.time() - start_time
                 log_info(f"⏱️  本轮耗时: {iter_time:.1f}s | 累计耗时: {total_time:.1f}s ({total_time/60:.1f}min)")
 
                 # 定期保存检查点
-                if (i + 1) % self.check_freq == 0:
-                    checkpoint_path = f'models/current_policy_batch{i + 1}.pkl' if CONFIG['use_frame'] == 'pytorch' else f'models/current_policy_batch{i + 1}.model'
+                if trained_batches > 0 and trained_batches % self.check_freq == 0:
+                    checkpoint_path = f'models/current_policy_batch{trained_batches}.pkl' if CONFIG['use_frame'] == 'pytorch' else f'models/current_policy_batch{trained_batches}.model'
                     self.policy_value_net.save_model(checkpoint_path)
                     log_info(f"🎯 检查点已保存: {checkpoint_path}")
-                    log_info(f"📈 训练进度: {i+1}/{self.game_batch_num} ({100*(i+1)/self.game_batch_num:.1f}%)")
+                    log_info(f"📈 训练进度: {trained_batches}/{self.game_batch_num} ({100*trained_batches/self.game_batch_num:.1f}%)")
 
                 log_info("=" * 70)
 
                 # 等待下一次更新
-                if i < self.game_batch_num - 1:
+                if trained_batches < self.game_batch_num:
                     wait_time = CONFIG['train_update_interval']
                     log_info(f"💤 等待 {wait_time}s 后进行下一次更新...")
                     time.sleep(wait_time)
