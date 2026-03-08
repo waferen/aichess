@@ -48,7 +48,8 @@ def zip_array(array, data=0.):  # 压缩成稀疏数组
         for j in range(len(array[0])):
             if array[i][j] != data:
                 zip_res.append([i, j, array[i][j]])
-    return np.array(zip_res)
+    # 兼容 numpy 2.x，使用 dtype=object 允许不规则数组
+    return np.array(zip_res, dtype=object)
 
 
 def recovery_array(array, data=0.):  # 恢复数组

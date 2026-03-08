@@ -10,7 +10,7 @@ CONFIG = {
     'batch_size': 512,  # 每次更新的train_step数量
     'kl_targ': 0.02,  # kl散度控制
     'epochs' : 5,  # 每次更新的train_step数量
-    'game_batch_num': 3000,  # 训练更新的次数
+    'game_batch_num': 100,  # 训练次数（AutoDL测试：100轮）
     'use_frame': 'pytorch',  # paddle or pytorch根据自己的环境进行切换
     'train_update_interval': 600,  #模型更新间隔时间
     'use_redis': False, # 数据存储方式

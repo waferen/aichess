@@ -72,7 +72,7 @@ class Net(nn.Module):
         policy = self.policy_act(policy)
         policy = torch.reshape(policy, [-1, 16 * 10 * 9])
         policy = self.policy_fc(policy)
-        policy = F.log_softmax(policy)
+        policy = F.log_softmax(policy, dim=1)  # 明确指定维度
         # 价值头
         value = self.value_conv(x)
         value = self.value_bn(value)
@@ -81,7 +81,7 @@ class Net(nn.Module):
         value = self.value_fc1(value)
         value = self.value_act1(value)
         value = self.value_fc2(value)
-        value = F.tanh(value)
+        value = torch.tanh(value)  # 使用 torch.tanh 替代已弃用的 F.tanh
 
         return policy, value
 
