@@ -1,45 +1,66 @@
-# aichess
-# 使用alphazero算法打造属于你自己的象棋AI
+# AIChess - 中国象棋AI
 
-## 一、每个文件的意义
-collect.py      自我对弈用于数据收集
+基于AlphaZero算法的中国象棋AI项目，使用MCTS（蒙特卡洛树搜索）和深度神经网络进行训练。
 
-train.py    用于训练模型
+## 项目特点
 
-game.py    实现象棋的逻辑
+- **MCTS搜索**: 使用蒙特卡洛树搜索进行棋局推演
+- **双神经网络**: 支持策略网络（Policy Network）和价值网络（Value Network）
+- **自对弈训练**: 通过自我对弈生成训练数据
+- **双框架支持**: 支持 PaddlePaddle 和 PyTorch 两种深度学习框架
 
-mcts.py    实现蒙特卡洛树搜索
+## 项目结构
 
-paddle_net.py，pytorch_net.py   神经网络对走子进行评估
+```
+aichess/
+├── config.py          # 配置文件
+├── game.py            # 游戏规则实现
+├── mcts.py            # MCTS搜索算法
+├── mcts_pure.py       # 纯MCTS（无神经网络）
+├── paddle_net.py      # PaddlePaddle网络实现
+├── pytorch_net.py     # PyTorch网络实现
+├── train.py           # 训练入口
+├── collect.py         # 数据收集
+├── UIplay.py          # 图形界面
+├── play_with_ai.py    # 人机对弈
+└── zip_array.py       # 数据压缩工具
+```
 
-play_with_ai.py  人机对弈print版
+## 环境要求
 
-UIplay.py   GUI界面人机对弈
+- Python 3.8+
+- PaddlePaddle 或 PyTorch
+- NumPy, Pickle
 
+## 快速开始
 
-## 二、提供了两个框架的版本进行训练：
-使用pytorch版本请设置config.py 中CONFIG['use_frame'] = 'pytorch'，
+### 训练模型
 
-使用pytorch版本请设置config.py 中CONFIG['use_frame'] = 'paddle'。
+```bash
+bash autodl_one_click.sh
+```
 
-不管是使用哪个框架，都一定要安装gpu版本，而且要用英伟达显卡，因为我们蒙特卡洛一次走此要进行上千次的神经网络推理，所以必须要快！
+### 人机对弈
 
+```bash
+python play_with_ai.py
+```
 
-## 三、本项目是多进程同步训练。
-训练时，直接运行'autodl_one_click.sh'文件即可，也可根据个人情况调整shell文件中collect并行数量。
+### 配置说明
 
-## 五、参考与致谢
-本项目主要参考的资料如下，十分感谢大佬们的分享
-1、程世东 https://zhuanlan.zhihu.com/p/34433581 （中国象棋cchesszero ）
+在 `config.py` 中可修改以下参数：
 
-2、AI在打野 https://aistudio.baidu.com/aistudio/projectdetail/1403398 （用paddle打造的五子棋AI）
+| 参数 | 说明 | 默认值 |
+|------|------|--------|
+| play_out | 每次移动模拟次数 | 200 |
+| c_puct | PUCT探索常数 | 5 |
+| batch_size | 批大小 | 512 |
+| game_batch_num | 训练局数 | 200 |
+| use_frame | 使用的深度学习框架 | pytorch |
 
-3、junxiaosong https://github.com/junxiaosong/AlphaZero_Gomoku (五子棋alphazero)
+## 技术细节
 
-4、B站视频链接：https://www.bilibili.com/video/BV183411g7GX
-
-5、书籍：边做边学深度强化学习：PyTorch 程序设计实践
-
-6、书籍：强化学习第二版
-
-后续应该会对该AI继续训练下去，亲手造一个超强的下棋AI简直太酷了！
+- **棋盘表示**: 9×10 的特征平面
+- **策略输出**: 2086种合法着法
+- **网络结构**: 13层残差网络 + 全局特征提取
+- **训练算法**: AlphaZero风格的自我对弈强化学习
